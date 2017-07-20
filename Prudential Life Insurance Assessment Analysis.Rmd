@@ -8,3 +8,49 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+#Load Libraries
+```{r}
+library(dplyr)
+library(data.table)
+library(caret)
+library(parallel)
+library(doParallel)
+```
+
+#Read in Data
+```{r}
+train <- read.csv("train.csv")
+dim(train)
+```
+
+
+
+```{r}
+colnames(train)
+```
+
+
+# NA Columns
+
+```{r}
+colnames(train)[colSums(is.na(train))>0]
+```
+
+```{r}
+sapply(train, anyNA)
+```
+
+# Response Distribution
+
+```{r}
+cbind(freq = table(train$Response),
+      percentage = prop.table(table(train$Response)) * 100)
+```
+
+
+# Summary
+```{r}
+
+```
+
