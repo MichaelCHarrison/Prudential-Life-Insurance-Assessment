@@ -127,7 +127,6 @@ for(i in 4:128){
         ggsave(filename, width = 6, height = 6, units = "cm")
         unlink(filename)
 }
-
 # for(i in 10:85){
 #         png(paste("./Attribute Density/", "dens", toString(i),
 #                   colnames(data)[i], ".png", sep = ""),
