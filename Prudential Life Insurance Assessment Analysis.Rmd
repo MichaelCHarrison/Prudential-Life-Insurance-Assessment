@@ -155,4 +155,17 @@ corrs <- corrs[order(-abs(corrs$Freq)),]
 ```
 
 
-#
+
+# Split Train into Train/Validation
+```{r}
+library(caret)
+library(doParallel)
+library(parallel)
+
+seed <- 10
+set.seed(10)
+inTrain <- createDataPartition(train$Response, p=.65, list = FALSE)
+training <- train[inTrain,]
+validation <- train[-inTrain,]
+```
+
