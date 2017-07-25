@@ -11,38 +11,74 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Load Libraries
 ```{r}
-library(dplyr)
-library(data.table)
+library(dtplyr)
 library(caret)
 library(parallel)
 library(doParallel)
+
+seed <- 10
+set.seed(seed)
 ```
 
 #Read in Data
 ```{r}
-train <- read.csv("train.csv")
+train <- read.table("train.csv", sep = ",", header = TRUE)
 dim(train)
-```
-
-
-# Response Distribution
-```{r}
-cbind(freq = table(train$Response),
-      percentage = prop.table(table(train$Response)) * 100)
-```
-
-
-
-
-# Summary
-```{r}
-sapply(train, summary)
 ```
 
 # Columns with NA Values
 
 ```{r}
-colnames(train)[colSums(is.na(train))>0]
+NA.columns <- colnames(train)[colSums(is.na(train))>0]
+NA.columns
+```
+
+## Check Number of NAs per column
+```{r}
+NAcolCounts <- colSums(is.na(train))[colSums(is.na(train))>0]
+NAcolCounts
+```
+## Check percentages of NAs in NA Columns; drop columns above threshold
+
+```{r}
+NAcolPercentages <- NAcolCounts/(dim(train)[1])
+NAcolPercentages
+```
+
+- I don't know the feasibility of imputing columns with significant amounts of data missing, especially considering my computation limitations
+- Set an arbitrary theshold of 70% NAs present in column to generate a list of columns to remove from the training set
+
+```{r}
+NAthreshold <- NAcolPercentages > .7
+NAthreshold
+```
+
+```{r}
+overNAThreshold <- as.list(names(NAthreshold[NAthreshold == TRUE]))
+overNAThreshold
+```
+
+- Drop the columns that are over the threshold
+- Depending on how things shake down with imputing the other columns, may be able to add back the dropped columns - could save on computing issues
+
+```{r}
+train.drop <- train[, !(names(train) %in% overNAThreshold)]
+```
+
+
+## Split Data for NA Handling and Imputation
+- First pass on this, I'm going to use the data.table that does not include the columns with NAs above the arbitrary threshold I set above
+
+```{r}
+train.imp <- train.drop
+train.NA <- train.drop
+```
+
+## Impute Data
+
+
+```{r}
+train.imp <- 
 ```
 
 # Column Classes
@@ -51,7 +87,7 @@ sapply(train, class)
 ```
 
 
-# Categorical Variables
+## Categorical Variables
 ```{r}
 categorical <- c("Product_Info_1", "Product_Info_2", "Product_Info_3", "Product_Info_5", "Product_Info_6", "Product_Info_7", "Employment_Info_2", "Employment_Info_3", "Employment_Info_5", "InsuredInfo_1", "InsuredInfo_2", "InsuredInfo_3", "InsuredInfo_4", "InsuredInfo_5", "InsuredInfo_6", "InsuredInfo_7", "Insurance_History_1", "Insurance_History_2", "Insurance_History_3", "Insurance_History_4", "Insurance_History_7", "Insurance_History_8", "Insurance_History_9", "Family_Hist_1", "Medical_History_2", "Medical_History_3", "Medical_History_4", "Medical_History_5", "Medical_History_6", "Medical_History_7", "Medical_History_8", "Medical_History_9", "Medical_History_11", "Medical_History_12", "Medical_History_13", "Medical_History_14", "Medical_History_16", "Medical_History_17", "Medical_History_18", "Medical_History_19", "Medical_History_20", "Medical_History_21", "Medical_History_22", "Medical_History_23", "Medical_History_25", "Medical_History_26", "Medical_History_27", "Medical_History_28", "Medical_History_29", "Medical_History_30", "Medical_History_31", "Medical_History_33", "Medical_History_34", "Medical_History_35", "Medical_History_36", "Medical_History_37", "Medical_History_38", "Medical_History_39", "Medical_History_40", "Medical_History_41")
 
@@ -71,7 +107,7 @@ sapply(train, class)
 Integer variables have been converted to factors.
 
 
-# Continuous Variables
+## Continuous Variables
 ```{r}
 continuous <- c("Product_Info_4", "Ins_Age", "Ht", "Wt", "BMI", "Employment_Info_1", "Employment_Info_4", "Employment_Info_6", "Insurance_History_5", "Family_Hist_2", "Family_Hist_3", "Family_Hist_4", "Family_Hist_5")
 
@@ -82,7 +118,7 @@ length(continuous)
 Not sure what to do with these variables.
 
 
-# Discrete Variables
+## Discrete Variables
 
 ```{r}
 discrete <- c("Medical_History_1", "Medical_History_10", "Medical_History_15", "Medical_History_24", "Medical_History_32")
@@ -94,7 +130,8 @@ length(discrete)
 Not sure how to handle these variables yet.
 
 
-# Dummy Variables
+## Dummy Variables
+
 
 ```{r}
 library(mice)
@@ -103,56 +140,6 @@ train_imputed <- mice(train, m=5, maxit = 50, method = 'pmm', seed = seed)
 summary(train_imputed)
 ```
 
-
-# Generate density plots
-```{r}
-library(ggplot2)
-folder <- "./Attribute Histograms/name.png"
-dir.create(dirname(folder), showWarnings = FALSE)
-
-data <- train
-
-for(i in 4:128){
-        # png(paste("./Attribute Density/", "dens", "0", toString(i),
-        #           colnames(data)[i], ".png", sep = ""),
-        #     width = 600,
-        #     height = 600,
-        #     units = "px")
-        # 
-        filename <- paste("./Attribute Histogragrams/", "hist", toString(i),
-                          colnames(data)[i], ".png", sep = "")
-        
-        qplot(data[,i], main = paste(toString(i), "-", names(data)[i]), 
-              xlab = names(data)[i])
-        ggsave(filename, width = 6, height = 6, units = "cm")
-        unlink(filename)
-}
-# for(i in 10:85){
-#         png(paste("./Attribute Density/", "dens", toString(i),
-#                   colnames(data)[i], ".png", sep = ""),
-#             width = 480,
-#             height = 480,
-#             units = "px")
-#         
-#         plot(density(data[,i]), main = paste(toString(i), "-", names(data)[i]), 
-#              xlab = names(data)[i])
-#         dev.off()
-# }
-
-```
-
-
-
-
-# Attribute Correlations
-
-```{r}
-corrs <- cor(train_imputed)
-corrs <- as.data.fram(as.table(corrs))
-corrs <- na.omit(corrs)
-corrs <- corrs[order(-abs(corrs$Freq)),]
-
-```
 
 
 
@@ -167,5 +154,7 @@ set.seed(10)
 inTrain <- createDataPartition(train$Response, p=.65, list = FALSE)
 training <- train[inTrain,]
 validation <- train[-inTrain,]
+
+
 ```
 
