@@ -217,10 +217,10 @@ fitRF.imp
 start <- Sys.time()
 paraOn()
 set.seed(seed)
-fitSVM.imp <- trian(Response~., data = training,
+fitSVM.imp <- train(Response~., data = training,
                     method = "svmRadial", metric = metric,
                     trControl = fitControl)
-elapsed.SVM <- Sys.time() - start
+elapsed.SVM.NA <- Sys.time() - start
 paraOff()
 fitSVM.imp
 ```
@@ -232,6 +232,17 @@ fitSVM.imp
 
 ## Unbalanced
 
+```{r}
+start <- Sys.time()
+paraOn()
+set.seed(seed)
+fitRF.NA <- train(Response~., data = training,
+                     method = "rf", metric = metric,
+                     trControl = fitControl)
+paraOff()
+elapsed.RFNA <- Sys.time() - start
+fitRF.NA
+```
 
 
 
