@@ -137,8 +137,14 @@ dim(testing)
 
 # Response Distribution
 ```{r}
-cbind(freq = table(training$Response), 
-      percentage = prop.table(table(training$Response)) * 100)
+response.dist <- cbind(freq = table(training$Response), 
+                       percentage = prop.table(table(training$Response)) * 100)
+response.dist
+
+```
+
+```{r}
+mean(response.dist[1:8])
 ```
 
 
@@ -147,18 +153,24 @@ cbind(freq = table(training$Response),
 - Using SMOTE to synthesize under represented samples
 
 ```{r, warning=FALSE, message=FALSE}
-install.packages('DMwR')
 library(DMwR)
 
 training$Response <- as.factor(training$Response)
 
+set.seed(seed)
 start <- Sys.time()
-training.smote <- SMOTE(Response~., data = training,
-                        seed = seed)$data
+training.smote <- SMOTE(Response~., data = training, 
+                        perc.over = 200, perc.under = 100,
+                        k = 5)
 
 elapsed.smote <- Sys.time() - start
+elapsed.smote
 ```
 
+```{r}
+cbind(freq = table(training.smote$Response), 
+      percentage = prop.table(table(training.smote$Response)) * 100)
+```
 
 
 
