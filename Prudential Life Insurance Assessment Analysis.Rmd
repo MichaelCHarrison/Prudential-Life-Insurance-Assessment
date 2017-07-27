@@ -67,7 +67,7 @@ train.drop <- train[, !(names(train) %in% overNAThreshold)]
 
 # Impute the data
 
-## Split Data for NA Handling and Imputation
+## Split Data for NA Handling and Imputation 
 - First pass on this, I'm going to use the data.table that does not include the columns with NAs above the arbitrary threshold I set above
 
 ```{r}
@@ -120,7 +120,7 @@ for(i in 1:3){
 set.seed(seed)
 train.imp1 <- complete(train.imp, 1)
 
-inTrain <- createDataPartition(train.imp1$Response, p=.60, list = FALSE)
+inTrain <- createDataPartition(train.imp1$Response, p=.50, list = FALSE)
 training <- train.imp1[inTrain,]
 val.test <- train.imp1[-inTrain,]
 inVal <- createDataPartition(val.test$Response, p = .5, list = FALSE)
@@ -149,24 +149,6 @@ mean(response.dist[1:8])
 ```
 
 
-# Synthesize Samples
-## SMOTE
-- Using SMOTE to synthesize under represented samples
-
-```{r, warning=FALSE, message=FALSE}
-library(DMwR)
-
-training$Response <- as.factor(training$Response)
-
-set.seed(seed)
-start <- Sys.time()
-training.smote <- SMOTE(Response~., data = training, 
-                        perc.over = 200, perc.under = 100,
-                        k = 5)
-
-elapsed.smote <- Sys.time() - start
-elapsed.smote
-```
 
 ```{r}
 response_freq <- cbind(freq = table(training.smote$Response),       
